@@ -2,40 +2,151 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include <conio.h>
+#include <thread>
+#include <chrono>
+#include <windows.h> // For SetConsoleTextAttribute and HANDLE
 using namespace std;
 
-void generateTicketNumber(int length) {
-    if (length == 0) return;
-    cout << rand() % 10;
-    generateTicketNumber(length - 1);
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+void setColor(int color) {
+    SetConsoleTextAttribute(hConsole, color);
 }
 
-void generateAlphanumericTicket(int length) {
-    if (length == 0) return;
-    int choice = rand() % 2;
-    if (choice == 0) {
-        cout << char(rand() % 10 + '0');
-    } else {
-        cout << char(rand() % 26 + 'A');
+void resetColor() {
+    SetConsoleTextAttribute(hConsole, 7); // Default console color
+}
+
+void recursiveGenerateTicketNumber(string& ticket, int length) {
+    if (_kbhit()) return;
+    for (int i = 0; i < length; i++) {
+        ticket[i] = '0' + rand() % 10;
     }
-    generateAlphanumericTicket(length - 1);
-}
-
-bool checkTicketContains7(string ticket, int index) {
-    if (index < 0) return false;
-    if (ticket[index] == '7') return true;
-    return checkTicketContains7(ticket, index - 1);
-}
-
-void checkTicketForWinning(int ticketLength) {
-    string ticket;
-    for (int i = 0; i < ticketLength; i++) {
-        ticket += to_string(rand() % 10);
+    cout << "\rGenerating Ticket: ";
+    for (char ch : ticket) {
+        if (ch == '7') setColor(14); // Yellow for 7
+        else if (ch == '1') setColor(9); // Blue for 1
+        else if (ch == '0') setColor(12); // Red for 0
+        else setColor(10); // Green for others
+        cout << ch;
+        resetColor();
     }
-    cout << "Generated Ticket Number: " << ticket << endl;
-    if (checkTicketContains7(ticket, ticket.length() - 1)) {
+    cout.flush();
+    this_thread::sleep_for(chrono::milliseconds(100));
+    recursiveGenerateTicketNumber(ticket, length);
+}
+
+void recursiveGenerateAlphanumeric(string& ticket, int length) {
+    if (_kbhit()) return;
+    for (int i = 0; i < length; i++) {
+        if (rand() % 2 == 0) {
+            ticket[i] = '0' + rand() % 10;
+        }
+        else {
+            ticket[i] = 'A' + rand() % 26;
+        }
+    }
+    cout << "\rGenerating Alphanumeric Ticket: ";
+    for (char ch : ticket) {
+        if (isdigit(ch)) setColor(10); // Green for digits
+        else setColor(13); // Magenta for letters
+        cout << ch;
+        resetColor();
+    }
+    cout.flush();
+    this_thread::sleep_for(chrono::milliseconds(100));
+    recursiveGenerateAlphanumeric(ticket, length);
+}
+
+void recursiveGenerateShapes(string& shapes, int length, const char symbols[]) {
+    if (_kbhit()) return;
+    for (int i = 0; i < length; i++) {
+        shapes[i] = symbols[rand() % 3];
+    }
+    cout << "\rGenerating Shapes: ";
+    for (char ch : shapes) {
+        if (ch == '$') setColor(14); // Yellow for $
+        else if (ch == '@') setColor(12); // Red for @
+        else if (ch == '#') setColor(10); // Green for #
+        cout << ch;
+        resetColor();
+    }
+    cout.flush();
+    this_thread::sleep_for(chrono::milliseconds(100));
+    recursiveGenerateShapes(shapes, length, symbols);
+}
+
+void recursiveCheckTicketForWinning(string& ticket, int length) {
+    if (_kbhit()) return;
+    for (int i = 0; i < length; i++) {
+        ticket[i] = '0' + rand() % 10;
+    }
+    cout << "\rGenerating Ticket: ";
+    for (char ch : ticket) {
+        if (ch == '7') setColor(14); // Yellow for 7
+        else if (ch == '1') setColor(9); // Blue for 1
+        else if (ch == '0') setColor(12); // Red for 0
+        else setColor(10); // Green for others
+        cout << ch;
+        resetColor();
+    }
+    cout.flush();
+    this_thread::sleep_for(chrono::milliseconds(100));
+    recursiveCheckTicketForWinning(ticket, length);
+}
+
+void generateTicketNumberWithAnimation(int length) {
+    string ticket(length, '_');
+    cout << "Generating Ticket: ";
+    recursiveGenerateTicketNumber(ticket, length);
+    _getch();
+    cout << "\nFinal Ticket: " << ticket << endl;
+}
+
+void generateAlphanumericWithAnimation(int length) {
+    string ticket(length, '_');
+    cout << "Generating Alphanumeric Ticket: ";
+    recursiveGenerateAlphanumeric(ticket, length);
+    _getch();
+    cout << "\nFinal Alphanumeric Ticket: " << ticket << endl;
+}
+
+void generateShapesWithAnimation() {
+    const char shapesArray[] = { '@', '#', '$' };
+    string shapes(3, '_');
+    cout << "Generating Shapes: ";
+    recursiveGenerateShapes(shapes, 3, shapesArray);
+    _getch();
+    cout << "\nFinal Shapes: " << shapes << endl;
+
+    if (shapes[0] == shapes[1] && shapes[1] == shapes[2]) {
+        cout << "Bingo! All shapes match: ";
+        for (char ch : shapes) {
+            if (ch == '$') setColor(14);
+            else if (ch == '@') setColor(12);
+            else if (ch == '#') setColor(10);
+            cout << ch;
+            resetColor();
+        }
+        cout << endl;
+    }
+    else {
+        cout << "No Bingo! Shapes do not match." << endl;
+    }
+}
+
+void checkTicketForWinningWithAnimation(int length) {
+    string ticket(length, '_');
+    cout << "Generating Ticket: ";
+    recursiveCheckTicketForWinning(ticket, length);
+    _getch();
+    cout << "\nFinal Ticket: " << ticket << endl;
+
+    if (ticket.find('7') != string::npos) {
         cout << "Yes, the ticket contains 7!" << endl;
-    } else {
+    }
+    else {
         cout << "No, the ticket does not contain 7." << endl;
     }
 }
@@ -43,26 +154,28 @@ void checkTicketForWinning(int ticketLength) {
 void menu(int choice) {
     if (choice == 1) {
         int length = (rand() % 2) + 5;
-        cout << "Generated Ticket Number of length " << length << ": ";
-        generateTicketNumber(length);
-        cout << endl;
-    } else if (choice == 2) {
+        generateTicketNumberWithAnimation(length);
+    }
+    else if (choice == 2) {
         int length = rand() % 3 + 5;
-        cout << "Generated Alphanumeric Ticket of length " << length << ": ";
-        generateAlphanumericTicket(length);
-        cout << endl;
-    } else if (choice == 3) {
+        generateAlphanumericWithAnimation(length);
+    }
+    else if (choice == 3) {
         int length = rand() % 2 + 5;
-        cout << "Checking ticket for number '7': ";
-        checkTicketForWinning(length);
-    } else if (choice == 4) {
+        checkTicketForWinningWithAnimation(length);
+    }
+    else if (choice == 4) {
+        generateShapesWithAnimation();
+    }
+    else if (choice == 5) {
         cout << "Exiting the program." << endl;
         return;
-    } else {
+    }
+    else {
         cout << "Invalid choice, please try again." << endl;
     }
     int newChoice;
-    cout << "\nEnter your choice again (1-3 for operations, 4 to exit): ";
+    cout << "\nEnter your choice again (1-5 for operations): ";
     cin >> newChoice;
     menu(newChoice);
 }
@@ -73,9 +186,10 @@ int main() {
     cout << "1. Generate Random Ticket Number (5 or 6 digits)" << endl;
     cout << "2. Generate Alphanumeric Ticket (letters and digits)" << endl;
     cout << "3. Check Ticket for Winning Number '7'" << endl;
-    cout << "4. Exit" << endl;
+    cout << "4. Generate Shapes and Check for Bingo" << endl;
+    cout << "5. Exit" << endl;
+    cout << "Enter your choice (1-5): ";
     int choice;
-    cout << "Enter your choice (1-4): ";
     cin >> choice;
     menu(choice);
     return 0;
